@@ -1,8 +1,6 @@
 import streamlit as st
-import io
 import struct
 import json
-from collections import defaultdict
 
 # Page configuration
 st.set_page_config(
@@ -183,7 +181,7 @@ def parse_3dm(file_bytes, filename):
         # Check file size
         file_size_mb = len(file_bytes) / (1024 * 1024)
         if file_size_mb > 150:
-            return None, f"File too large ({file_size_mb:.1f} MB) for 3DM parsing. Please use a smaller file or process locally."
+            return None, f"File too large ({file_size_mb:.1f} MB) for 3DM parsing. Please use a smaller file."
         
         # Read the 3DM file with error handling
         try:
@@ -207,7 +205,7 @@ def parse_3dm(file_bytes, filename):
                 if layer_index < len(model.Layers):
                     layer = model.Layers[layer_index]
                     layer_names.add(layer.Name)
-            except Exception as e:
+            except Exception:
                 # Skip problematic objects
                 continue
         
@@ -313,90 +311,90 @@ def main():
             total_files = len(results)
             total_layers = sum(len(r['layers']) for r in results)
             successful_files = sum(1 for r in results if not r['error'])
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Display stats in columns
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown(f"""
-                <div class='stat-card'>
-                    <div class='stat-value'>{total_files}</div>
-                    <div class='stat-label'>Files Processed</div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-                <div class='stat-card'>
-                    <div class='stat-value'>{total_layers}</div>
-                    <div class='stat-label'>Total Layers Found</div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown(f"""
-                <div class='stat-card'>
-                    <div class='stat-value'>{successful_files}</div>
-                    <div class='stat-label'>Successful Extractions</div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Collect all unique layer names across all files
-        all_unique_layers = set()
-        for result in results:
-            if result['layers'] and not result['error']:
-                all_unique_layers.update(result['layers'])
-        
-        # Display unique layers summary
-        if all_unique_layers:
-            st.markdown("""
-                <div class='unique-layers-card'>
-                    <div class='unique-layers-title'>
-                        🎯 All Unique Layer Names Across All Files
-                        <span class='unique-layer-count'>{} Unique Layers</span>
-                    </div>
-                </div>
-            """.format(len(all_unique_layers)), unsafe_allow_html=True)
             
-            # Display tags for unique layers
-            layers_html = ""
-            for layer in sorted(all_unique_layers):
-                layers_html += f"<span class='unique-layer-tag'>{layer}</span>"
+            st.markdown("<br>", unsafe_allow_html=True)
             
-            st.markdown(f"<div style='margin-top: -1.5rem; margin-bottom: 2rem;'>{layers_html}</div>", unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Display results
-        st.markdown("### 📊 Results")
-        
-        for result in results:
-            card_class = 'error-card' if result['error'] else 'file-card'
+            # Display stats in columns
+            col1, col2, col3 = st.columns(3)
             
-            with st.container():
+            with col1:
                 st.markdown(f"""
-                    <div class='{card_class}'>
-                        <h4>{result['filename']} <span class='file-type-badge'>{result['file_type']}</span></h4>
+                    <div class='stat-card'>
+                        <div class='stat-value'>{total_files}</div>
+                        <div class='stat-label'>Files Processed</div>
                     </div>
                 """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                    <div class='stat-card'>
+                        <div class='stat-value'>{total_layers}</div>
+                        <div class='stat-label'>Total Layers Found</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown(f"""
+                    <div class='stat-card'>
+                        <div class='stat-value'>{successful_files}</div>
+                        <div class='stat-label'>Successful Extractions</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Collect all unique layer names across all files
+            all_unique_layers = set()
+            for result in results:
+                if result['layers'] and not result['error']:
+                    all_unique_layers.update(result['layers'])
+            
+            # Display unique layers summary
+            if all_unique_layers:
+                st.markdown("""
+                    <div class='unique-layers-card'>
+                        <div class='unique-layers-title'>
+                            🎯 All Unique Layer Names Across All Files
+                            <span class='unique-layer-count'>{} Unique Layers</span>
+                        </div>
+                    </div>
+                """.format(len(all_unique_layers)), unsafe_allow_html=True)
                 
-                if result['error']:
-                    st.error(f"❌ Error: {result['error']}")
-                elif not result['layers']:
-                    st.info("ℹ️ No layers or materials found")
-                else:
-                    for layer in result['layers']:
-                        st.markdown(f"""
-                            <div class='layer-item'>
-                                🔹 {layer}
-                            </div>
-                        """, unsafe_allow_html=True)
+                # Display tags for unique layers
+                layers_html = ""
+                for layer in sorted(all_unique_layers):
+                    layers_html += f"<span class='unique-layer-tag'>{layer}</span>"
                 
-                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown(f"<div style='margin-top: -1.5rem; margin-bottom: 2rem;'>{layers_html}</div>", unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Display results
+            st.markdown("### 📊 Results")
+            
+            for result in results:
+                card_class = 'error-card' if result['error'] else 'file-card'
+                
+                with st.container():
+                    st.markdown(f"""
+                        <div class='{card_class}'>
+                            <h4>{result['filename']} <span class='file-type-badge'>{result['file_type']}</span></h4>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    if result['error']:
+                        st.error(f"❌ Error: {result['error']}")
+                    elif not result['layers']:
+                        st.info("ℹ️ No layers or materials found")
+                    else:
+                        for layer in result['layers']:
+                            st.markdown(f"""
+                                <div class='layer-item'>
+                                    🔹 {layer}
+                                </div>
+                            """, unsafe_allow_html=True)
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
             
             # Clear button
             col1, col2, col3 = st.columns([2, 1, 2])
