@@ -339,33 +339,23 @@ def main():
     
     else:
         # Instructions when no files uploaded
+        st.markdown("### 👋 Welcome!")
+        st.markdown("Quickly identify all unique layer names in your CAD files without opening any 3D software.")
+        
+        st.markdown("#### 🚀 How to use:")
         st.markdown("""
-            <div style='background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);'>
-                <h3 style='color: #1e3a8a; margin-bottom: 1rem;'>👋 Welcome!</h3>
-                <p style='font-size: 1.1rem; color: #374151; margin-bottom: 1.5rem;'>
-                    Quickly identify all unique layer names in your CAD files without opening any 3D software.
-                </p>
-                
-                <h4 style='color: #1e3a8a; margin-bottom: 0.75rem;'>🚀 How to use:</h4>
-                <ol style='color: #4b5563; font-size: 1rem; line-height: 1.8;'>
-                    <li><strong>Upload your files</strong> - Click the browse button above or drag & drop your .glb or .3dm files</li>
-                    <li><strong>Wait a moment</strong> - The app will automatically extract all layer/material names</li>
-                    <li><strong>View results</strong> - See all unique layer names at the top, then scroll down for per-file details</li>
-                </ol>
-                
-                <h4 style='color: #1e3a8a; margin-top: 1.5rem; margin-bottom: 0.75rem;'>📁 What we extract:</h4>
-                <ul style='color: #4b5563; font-size: 1rem; line-height: 1.8; list-style-type: none; padding-left: 0;'>
-                    <li>✅ <strong>.glb files</strong> → Material names from your 3D models</li>
-                    <li>✅ <strong>.3dm files</strong> → Layer names from your Rhino CAD files</li>
-                </ul>
-                
-                <div style='background: #eff6ff; padding: 1rem; border-radius: 8px; margin-top: 1.5rem; border-left: 4px solid #3b82f6;'>
-                    <p style='color: #1e40af; margin: 0; font-size: 0.95rem;'>
-                        💡 <strong>Pro Tip:</strong> Upload multiple files at once to see all unique naming conventions across your entire project!
-                    </p>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+        1. **Upload your files** - Click the browse button above or drag & drop your .glb or .3dm files
+        2. **Wait a moment** - The app will automatically extract all layer/material names
+        3. **View results** - See all unique layer names at the top, then scroll down for per-file details
+        """)
+        
+        st.markdown("#### 📁 What we extract:")
+        st.markdown("""
+        - ✅ **.glb files** → Material names from your 3D models
+        - ✅ **.3dm files** → Layer names from your Rhino CAD files
+        """)
+        
+        st.info("💡 **Pro Tip:** Upload multiple files at once to see all unique naming conventions across your entire project!")
 
 if __name__ == "__main__":
     main()
