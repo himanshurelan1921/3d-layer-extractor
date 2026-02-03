@@ -201,6 +201,10 @@ def parse_3dm(file_bytes, filename):
         return None, str(e)
 
 def main():
+    # Initialize session state for file management
+    if 'uploader_key' not in st.session_state:
+        st.session_state.uploader_key = 0
+    
     # Header with gradient background
     st.markdown("""
         <div class='header-container'>
@@ -209,12 +213,13 @@ def main():
         </div>
     """, unsafe_allow_html=True)
     
-    # File uploader
+    # File uploader with dynamic key for clearing
     uploaded_files = st.file_uploader(
         "Upload your 3D files (.glb or .3dm)",
         type=['glb', '3dm'],
         accept_multiple_files=True,
-        help="You can upload multiple files at once"
+        help="You can upload multiple files at once",
+        key=f"file_uploader_{st.session_state.uploader_key}"
     )
     
     if uploaded_files:
@@ -334,8 +339,11 @@ def main():
                 st.markdown("<br>", unsafe_allow_html=True)
         
         # Clear button
-        if st.button("🗑️ Clear All", type="secondary", use_container_width=True):
-            st.rerun()
+        col1, col2, col3 = st.columns([2, 1, 2])
+        with col2:
+            if st.button("🗑️ Clear All", type="primary", use_container_width=True):
+                st.session_state.uploader_key += 1
+                st.rerun()
     
     else:
         # Instructions when no files uploaded
