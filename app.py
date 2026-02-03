@@ -16,10 +16,10 @@ st.set_page_config(
 st.markdown("""
     <style>
     .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
     }
     .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
     }
     .block-container {
         padding-top: 2rem;
@@ -48,7 +48,7 @@ st.markdown("""
     .stat-value {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #667eea;
+        color: #1e3a8a;
         margin-bottom: 0.5rem;
     }
     .stat-label {
@@ -60,7 +60,7 @@ st.markdown("""
         padding: 1.5rem;
         border-radius: 12px;
         margin-bottom: 1rem;
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #3b82f6;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     .error-card {
@@ -72,17 +72,52 @@ st.markdown("""
         padding: 0.75rem 1rem;
         border-radius: 8px;
         margin-bottom: 0.5rem;
-        border-left: 3px solid #667eea;
+        border-left: 3px solid #3b82f6;
     }
     .file-type-badge {
         display: inline-block;
-        background: #667eea;
+        background: #3b82f6;
         color: white;
         padding: 0.25rem 0.75rem;
         border-radius: 12px;
         font-size: 0.75rem;
         font-weight: 600;
         margin-left: 0.5rem;
+    }
+    .unique-layers-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        border: 2px solid #3b82f6;
+    }
+    .unique-layers-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1e3a8a;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .unique-layer-tag {
+        display: inline-block;
+        background: #eff6ff;
+        color: #1e40af;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        margin: 0.25rem;
+        font-weight: 500;
+        border: 1px solid #bfdbfe;
+    }
+    .unique-layer-count {
+        background: #1e3a8a;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        margin-left: auto;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -231,6 +266,32 @@ def main():
                     <div class='stat-label'>Successful Extractions</div>
                 </div>
             """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Collect all unique layer names across all files
+        all_unique_layers = set()
+        for result in results:
+            if result['layers'] and not result['error']:
+                all_unique_layers.update(result['layers'])
+        
+        # Display unique layers summary
+        if all_unique_layers:
+            st.markdown("""
+                <div class='unique-layers-card'>
+                    <div class='unique-layers-title'>
+                        🎯 All Unique Layer Names Across All Files
+                        <span class='unique-layer-count'>{} Unique Layers</span>
+                    </div>
+                </div>
+            """.format(len(all_unique_layers)), unsafe_allow_html=True)
+            
+            # Display tags for unique layers
+            layers_html = ""
+            for layer in sorted(all_unique_layers):
+                layers_html += f"<span class='unique-layer-tag'>{layer}</span>"
+            
+            st.markdown(f"<div style='margin-top: -1.5rem; margin-bottom: 2rem;'>{layers_html}</div>", unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
