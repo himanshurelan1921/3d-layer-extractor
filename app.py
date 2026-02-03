@@ -242,6 +242,9 @@ def main():
     )
     
     if uploaded_files:
+        # Initialize results list
+        results = []
+        
         # Check total file sizes first
         total_size_mb = sum(file.size for file in uploaded_files) / (1024 * 1024)
         max_size_mb = 500  # 500MB total limit
@@ -250,7 +253,6 @@ def main():
             st.error(f"⚠️ Total file size ({total_size_mb:.1f} MB) exceeds the limit of {max_size_mb} MB. Please upload fewer or smaller files.")
         else:
             # Process files
-            results = []
             progress_bar = st.progress(0)
             status_text = st.empty()
             
@@ -305,10 +307,12 @@ def main():
             progress_bar.empty()
             status_text.empty()
         
-        # Statistics
-        total_files = len(results)
-        total_layers = sum(len(r['layers']) for r in results)
-        successful_files = sum(1 for r in results if not r['error'])
+        # Only display statistics if we have results
+        if results:
+            # Statistics
+            total_files = len(results)
+            total_layers = sum(len(r['layers']) for r in results)
+            successful_files = sum(1 for r in results if not r['error'])
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -393,13 +397,13 @@ def main():
                         """, unsafe_allow_html=True)
                 
                 st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Clear button
-        col1, col2, col3 = st.columns([2, 1, 2])
-        with col2:
-            if st.button("🗑️ Clear All", type="primary", use_container_width=True):
-                st.session_state.uploader_key += 1
-                st.rerun()
+            
+            # Clear button
+            col1, col2, col3 = st.columns([2, 1, 2])
+            with col2:
+                if st.button("🗑️ Clear All", type="primary", use_container_width=True):
+                    st.session_state.uploader_key += 1
+                    st.rerun()
     
     else:
         # Instructions when no files uploaded
