@@ -180,25 +180,44 @@ def parse_3dm(file_bytes, filename):
         except ImportError:
             return None, "rhino3dm library not installed. Install with: pip install rhino3dm"
         
-        # Read the 3DM file
-        model = rhino3dm.File3dm.FromByteArray(file_bytes)
+        # Check file size
+        file_size_mb = len(file_bytes) / (1024 * 1024)
+        if file_size_mb > 150:
+            return None, f"File too large ({file_size_mb:.1f} MB) for 3DM parsing. Please use a smaller file or process locally."
+        
+        # Read the 3DM file with error handling
+        try:
+            model = rhino3dm.File3dm.FromByteArray(file_bytes)
+        except Exception as e:
+            return None, f"Failed to parse 3DM file: {str(e)}"
         
         if not model:
-            return None, "Failed to parse 3DM file"
+            return None, "Failed to parse 3DM file - file may be corrupted"
         
-        # Extract unique layer names
+        # Extract unique layer names with limits to prevent memory issues
         layer_names = set()
+        max_objects = 50000  # Limit objects processed
         
-        for obj in model.Objects:
-            layer_index = obj.Attributes.LayerIndex
-            if layer_index < len(model.Layers):
-                layer = model.Layers[layer_index]
-                layer_names.add(layer.Name)
+        object_count = min(len(model.Objects), max_objects)
+        
+        for i in range(object_count):
+            try:
+                obj = model.Objects[i]
+                layer_index = obj.Attributes.LayerIndex
+                if layer_index < len(model.Layers):
+                    layer = model.Layers[layer_index]
+                    layer_names.add(layer.Name)
+            except Exception as e:
+                # Skip problematic objects
+                continue
+        
+        if len(model.Objects) > max_objects:
+            return sorted(list(layer_names)), f"Note: Only processed first {max_objects} objects due to file complexity"
         
         return sorted(list(layer_names)), None
         
     except Exception as e:
-        return None, str(e)
+        return None, f"Unexpected error: {str(e)}"
 
 def main():
     # Initialize session state for file management
@@ -223,31 +242,68 @@ def main():
     )
     
     if uploaded_files:
-        # Process files
-        results = []
+        # Check total file sizes first
+        total_size_mb = sum(file.size for file in uploaded_files) / (1024 * 1024)
+        max_size_mb = 500  # 500MB total limit
         
-        with st.spinner('Processing files...'):
-            for uploaded_file in uploaded_files:
-                file_bytes = uploaded_file.read()
-                file_extension = uploaded_file.name.split('.')[-1].lower()
-                
-                if file_extension == 'glb':
-                    layers, error = parse_glb(file_bytes, uploaded_file.name)
-                    file_type = 'GLB'
-                elif file_extension == '3dm':
-                    layers, error = parse_3dm(file_bytes, uploaded_file.name)
-                    file_type = '3DM'
-                else:
-                    layers = None
-                    error = "Unsupported file type"
-                    file_type = 'UNKNOWN'
-                
-                results.append({
-                    'filename': uploaded_file.name,
-                    'file_type': file_type,
-                    'layers': layers if layers else [],
-                    'error': error
-                })
+        if total_size_mb > max_size_mb:
+            st.error(f"⚠️ Total file size ({total_size_mb:.1f} MB) exceeds the limit of {max_size_mb} MB. Please upload fewer or smaller files.")
+        else:
+            # Process files
+            results = []
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            for idx, uploaded_file in enumerate(uploaded_files):
+                try:
+                    # Update progress
+                    progress = (idx + 1) / len(uploaded_files)
+                    progress_bar.progress(progress)
+                    status_text.text(f"Processing {idx + 1}/{len(uploaded_files)}: {uploaded_file.name}")
+                    
+                    # Check individual file size
+                    file_size_mb = uploaded_file.size / (1024 * 1024)
+                    if file_size_mb > 200:
+                        results.append({
+                            'filename': uploaded_file.name,
+                            'file_type': 'TOO LARGE',
+                            'layers': [],
+                            'error': f"File too large ({file_size_mb:.1f} MB). Maximum size per file is 200 MB."
+                        })
+                        continue
+                    
+                    file_bytes = uploaded_file.read()
+                    file_extension = uploaded_file.name.split('.')[-1].lower()
+                    
+                    if file_extension == 'glb':
+                        layers, error = parse_glb(file_bytes, uploaded_file.name)
+                        file_type = 'GLB'
+                    elif file_extension == '3dm':
+                        layers, error = parse_3dm(file_bytes, uploaded_file.name)
+                        file_type = '3DM'
+                    else:
+                        layers = None
+                        error = "Unsupported file type"
+                        file_type = 'UNKNOWN'
+                    
+                    results.append({
+                        'filename': uploaded_file.name,
+                        'file_type': file_type,
+                        'layers': layers if layers else [],
+                        'error': error
+                    })
+                    
+                except Exception as e:
+                    results.append({
+                        'filename': uploaded_file.name,
+                        'file_type': 'ERROR',
+                        'layers': [],
+                        'error': f"Failed to process file: {str(e)}"
+                    })
+            
+            # Clear progress indicators
+            progress_bar.empty()
+            status_text.empty()
         
         # Statistics
         total_files = len(results)
@@ -364,6 +420,13 @@ def main():
         """)
         
         st.info("💡 **Pro Tip:** Upload multiple files at once to see all unique naming conventions across your entire project!")
+        
+        st.warning("""
+        ⚠️ **File Size Limits:**
+        - Maximum **200 MB per file**
+        - Maximum **500 MB total** for all files combined
+        - For very large 3DM files, consider processing them locally or splitting into smaller files
+        """)
 
 if __name__ == "__main__":
     main()
