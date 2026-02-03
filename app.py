@@ -201,18 +201,9 @@ def parse_3dm(file_bytes, filename):
         return None, str(e)
 
 def main():
-    # Display logo at the top
-    col1, col2, col3 = st.columns([1, 3, 1])
-    with col2:
-        # Check if logo exists
-        import os
-        logo_path = "vdb_logo.jpg"
-        if os.path.exists(logo_path):
-            st.image(logo_path, use_container_width=True)
-        
     # Header with gradient background
     st.markdown("""
-        <div class='header-container' style='margin-top: 1rem;'>
+        <div class='header-container'>
             <h1>🎨 3D File Layer Extractor</h1>
             <p class='subtitle'>Extract material and layer names from GLB and 3DM files</p>
         </div>
